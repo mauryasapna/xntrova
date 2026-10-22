@@ -43,7 +43,7 @@ export default function HeroSection() {
     return lines.filter(Boolean).join("\n");
   };
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.phone.trim()) {
@@ -54,13 +54,30 @@ export default function HeroSection() {
     setErrorMessage("");
     setFormStatus("submitting");
 
+    // 1. Save to MySQL Database via PHP backend
+    try {
+      await fetch("http://localhost/xntrova/submit_form.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          service: formData.service,
+          message: formData.ownWords,
+        }),
+      });
+    } catch (err) {
+      console.warn("DB save warning:", err);
+    }
+
+    // 2. Open WhatsApp
     const messageText = getCleanWhatsappMessage();
     const whatsappUrl = `https://wa.me/919142479986?text=${encodeURIComponent(messageText)}`;
 
     setTimeout(() => {
       setFormStatus("success");
       window.open(whatsappUrl, "_blank");
-    }, 300);
+    }, 200);
   };
 
   return (
